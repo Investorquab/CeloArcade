@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>CeloArcade — Onchain Game Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -832,7 +833,7 @@ nav::-webkit-scrollbar{display:none;}
 // ══════════════════════════════════════════
 // CONFIG — update after deploy
 // ══════════════════════════════════════════
-const CONTRACT_ADDRESS = "0x104E6D889875c5bac04c6a17cfb66d74b4638e95";
+const CONTRACT_ADDRESS = "YOUR_CONTRACT_ADDRESS";
 const ABI = [
   "function register(address referrer) external",
   "function playGame(uint8 gameType, uint8 category, bool won, uint256 xpToAward) external payable",
@@ -959,10 +960,6 @@ function sound(type){
 
 // ── WALLET ────────────────────────────────
 async function connectWallet(){
-  if(!window.ethers){
-    toast('Loading...');
-    await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
-  }
   try{
     const eth=window.ethereum;
     if(!eth){toast('Install MetaMask or use MiniPay',true);return;}
