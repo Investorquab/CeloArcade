@@ -393,6 +393,19 @@ nav::-webkit-scrollbar{display:none;}
   </div>
 </div>
 
+<div class="lvlup-overlay" id="regPopup">
+  <div class="lvlup-box" style="border-color:var(--g);box-shadow:0 0 60px rgba(0,255,136,0.2);max-width:360px;width:90%">
+    <div style="font-size:3rem;margin-bottom:12px">🎮</div>
+    <div style="font-family:var(--display);font-size:1.3rem;font-weight:900;color:var(--g);letter-spacing:2px;margin-bottom:8px">JOIN CELOARCADE</div>
+    <div style="color:var(--muted);font-size:0.82rem;margin-bottom:16px;line-height:1.6">One-time registration to start playing all games.</div>
+    <div style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);border-radius:12px;padding:14px;margin-bottom:22px;font-family:var(--mono);font-size:1rem;color:var(--g);text-align:center;font-weight:700">
+      🎁 FREE 0.05 CELO to play
+    </div>
+    <button onclick="registerPlayer()" style="width:100%;background:linear-gradient(135deg,var(--g),var(--b));color:#000;border:none;padding:17px;border-radius:12px;font-family:var(--display);font-size:0.85rem;font-weight:900;letter-spacing:1px;cursor:pointer">REGISTER &amp; CLAIM FREE CELO</button>
+    <div style="margin-top:10px;font-size:0.7rem;color:var(--muted);text-align:center">No deposit needed · Fully onchain</div>
+  </div>
+</div>
+
 <!-- HEADER -->
 <header>
   <div class="logo"><span class="lg">CELO</span><span class="lb">ARCADE</span></div>
@@ -421,13 +434,12 @@ nav::-webkit-scrollbar{display:none;}
 
 <!-- NAV -->
 <nav>
-  <button class="nav-btn active" onclick="nav('home')">🏠 Hub</button>
-  <button class="nav-btn" onclick="nav('quiz-setup')">🧠 QuizBlitz</button>
-  <button class="nav-btn" onclick="nav('predict')">🎯 Predict</button>
+  <button class="nav-btn active" onclick="nav('home')">🏠 Home</button>
+  <button class="nav-btn" onclick="nav('quiz-setup')">🧠 Quiz</button>
   <button class="nav-btn" onclick="nav('speed-setup')">⚡ Speed</button>
   <button class="nav-btn" onclick="nav('rooms')">⚔️ 1v1</button>
   <button class="nav-btn" onclick="nav('leaderboard')">🏆 Board</button>
-  <button class="nav-btn" onclick="nav('profile')">👤 Profile</button>
+  <button class="nav-btn" onclick="nav('profile')">👤 Me</button>
 </nav>
 
 <!-- ════ HOME ════ -->
@@ -686,7 +698,7 @@ nav::-webkit-scrollbar{display:none;}
 <div class="screen" id="screen-predict">
   <div class="pred-hdr">🎯 PREDICT &amp; WIN</div>
   <div class="pred-sub">Vote on today's questions. Pool is shared among winners when results drop.</div>
-  <div id="predList"><div class="no-pred"><div class="ni">🔮</div>Loading predictions...</div></div>
+  <div id="predList"><div class="no-pred"><div class="ni">🔮</div><div style="font-family:var(--display);font-size:0.9rem;letter-spacing:2px;color:var(--p);margin-bottom:8px">COMING SOON</div><div style="font-size:0.78rem">Daily predictions dropping soon.<br/>Check back tomorrow!</div></div></div>
 </div>
 
 <!-- ════ SPEED SETUP ════ -->
@@ -993,7 +1005,7 @@ async function loadPlayer(){
     const bal=await provider.getBalance(addr);
     document.getElementById('celoVal').textContent=parseFloat(ethers.formatEther(bal)).toFixed(3);
     const reg=await contract.isRegistered(addr);
-    if(!reg){document.getElementById('regSection').style.display='block';document.getElementById('profContent').style.display='none';return;}
+    if(!reg){document.getElementById('regPopup').classList.add('show');return;}
     document.getElementById('regSection').style.display='none';document.getElementById('profContent').style.display='block';
     const p=await contract.getPlayer(addr);
     prevLevel=pStats.level;
@@ -1040,6 +1052,7 @@ async function registerPlayer(){
     const tx=await contract.register(ref);
     await tx.wait();
     txHide();toast('🎮 Registered! 0.05 CELO sent!');sound('win');confetti();
+    document.getElementById('regPopup').classList.remove('show');
     await loadPlayer();
   }catch(e){txHide();toast(e.reason||e.message||'Failed',true);}
 }
@@ -1356,7 +1369,7 @@ function nav(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const s=document.getElementById('screen-'+name);if(s)s.classList.add('active');
-  const map={home:0,'quiz-setup':1,predict:2,'speed-setup':3,rooms:4,leaderboard:5,profile:6,quiz:1,results:1,speed:3,'speed-results':3};
+  const map={home:0,'quiz-setup':1,predict:1,'speed-setup':2,rooms:3,leaderboard:4,profile:5,quiz:1,results:1,speed:2,'speed-results':2};
   const idx=map[name];if(idx!==undefined)document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
   if(name==='leaderboard')loadLeaderboard();
   if(name==='rooms')loadRooms();
