@@ -72,6 +72,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
 .connect-btn{background:linear-gradient(135deg,var(--g),var(--b));color:#000;border:none;padding:9px 22px;border-radius:8px;font-family:var(--display);font-weight:900;font-size:0.72rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;}
 .connect-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,255,136,0.3);}
+.me-btn{background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:7px 14px;border-radius:7px;font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.me-btn:hover{border-color:var(--g);color:var(--g);}
+.disconnect-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:7px 10px;border-radius:7px;font-size:0.78rem;cursor:pointer;transition:all 0.2s;}
+.disconnect-btn:hover{border-color:var(--red);color:var(--red);}
 
 /* ── NAV ── */
 nav{display:flex;gap:4px;padding:10px 24px;border-bottom:1px solid var(--border);background:rgba(6,8,14,0.9);overflow-x:auto;}
@@ -426,9 +430,11 @@ nav::-webkit-scrollbar{display:none;}
     </div>
   </div>
   <div class="hdr-right">
-    <div class="celo-bal" id="celoBal" style="display:none">⚡ <span id="celoVal">0.000</span> CELO</div>
+    <div class="celo-bal" id="celoBal" style="display:none">⚡ <span id="celoVal">0.000</span></div>
     <div class="wallet-pill" id="walletPill"></div>
-    <button class="connect-btn" id="connectBtn" onclick="connectWallet()">CONNECT WALLET</button>
+    <button class="me-btn" id="meBtn" style="display:none" onclick="nav('profile')">👤 Me</button>
+    <button class="disconnect-btn" id="disconnectBtn" style="display:none" onclick="disconnectWallet()">✕</button>
+    <button class="connect-btn" id="connectBtn" onclick="connectWallet()">CONNECT</button>
   </div>
 </header>
 
@@ -436,10 +442,10 @@ nav::-webkit-scrollbar{display:none;}
 <nav>
   <button class="nav-btn active" onclick="nav('home')">🏠 Home</button>
   <button class="nav-btn" onclick="nav('quiz-setup')">🧠 Quiz</button>
+  <button class="nav-btn" onclick="nav('predict')">🎯 Predict</button>
   <button class="nav-btn" onclick="nav('speed-setup')">⚡ Speed</button>
   <button class="nav-btn" onclick="nav('rooms')">⚔️ 1v1</button>
   <button class="nav-btn" onclick="nav('leaderboard')">🏆 Board</button>
-  <button class="nav-btn" onclick="nav('profile')">👤 Me</button>
 </nav>
 
 <!-- ════ HOME ════ -->
@@ -979,8 +985,9 @@ async function connectWallet(){
     await provider.send("eth_requestAccounts",[]);
     try{await eth.request({method:'wallet_switchEthereumChain',params:[{chainId:'0xA4EC'}]});}
     catch(e){if(e.code===4902)await eth.request({method:'wallet_addEthereumChain',params:[{chainId:'0xA4EC',chainName:'Celo Mainnet',nativeCurrency:{name:'CELO',symbol:'CELO',decimals:18},rpcUrls:['https://forno.celo.org'],blockExplorerUrls:['https://explorer.celo.org/mainnet']}]});}
-    signer=await provider.getSigner();
-    addr=await signer.getAddress();
+    const accounts=await provider.send("eth_accounts",[]);
+    addr=accounts[0];
+    signer=await provider.getSigner(addr);
     contract=new ethers.Contract(CONTRACT_ADDRESS,ABI,signer);
     document.getElementById('connectBtn').style.display='none';
     document.getElementById('walletPill').style.display='flex';
@@ -988,6 +995,8 @@ async function connectWallet(){
     document.getElementById('celoBal').style.display='flex';
     document.getElementById('xpWrap').style.display='flex';
     document.getElementById('streakPill').style.display='flex';
+    document.getElementById('meBtn').style.display='flex';
+    document.getElementById('disconnectBtn').style.display='flex';
     document.getElementById('homeGuest').style.display='none';
     document.getElementById('homePlayer').style.display='block';
     await loadPlayer();
@@ -1042,6 +1051,15 @@ function updateAllStats(){
   document.getElementById('profAddr').textContent=addr;
   document.getElementById('refLink').value=`${location.origin}${location.pathname}?ref=${addr}`;
   if(pStats.level>prevLevel){showLevelUp(pStats.level);}
+}
+
+function disconnectWallet(){
+  provider=null;signer=null;contract=null;addr=null;
+  pStats={games:0,wins:0,earned:0,xp:0,level:1,streak:0,refs:0,registered:false};
+  ['connectBtn'].forEach(id=>document.getElementById(id).style.display='flex');
+  ['walletPill','celoBal','xpWrap','streakPill','meBtn','disconnectBtn','homePlayer'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('homeGuest').style.display='flex';
+  nav('home');toast('Wallet disconnected');
 }
 
 async function registerPlayer(){
@@ -1369,7 +1387,7 @@ function nav(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const s=document.getElementById('screen-'+name);if(s)s.classList.add('active');
-  const map={home:0,'quiz-setup':1,predict:1,'speed-setup':2,rooms:3,leaderboard:4,profile:5,quiz:1,results:1,speed:2,'speed-results':2};
+  const map={home:0,'quiz-setup':1,predict:2,'speed-setup':3,rooms:4,leaderboard:5,profile:-1,quiz:1,results:1,speed:3,'speed-results':3};
   const idx=map[name];if(idx!==undefined)document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
   if(name==='leaderboard')loadLeaderboard();
   if(name==='rooms')loadRooms();
