@@ -937,7 +937,7 @@ let provider,signer,contract,addr=null;
 let pStats={games:0,wins:0,earned:0,xp:0,level:1,streak:0,refs:0,registered:false};
 let quiz={qs:[],idx:0,correct:0,earned:0,xp:0,bet:0.001,cat:''};
 let speed={mode:'math',bet:0.001,score:0,streak:0,timer:60,iv:null,xp:0,earned:0};
-let selCat=CATS[0],selQuizBet=0.001,selSpeedMode='math',selSpeedBet=0.001;
+let selCat=CATS[0],selQuizBet=0.001,selSpeedBet=0.001;
 let selRoomGameType=0,selRoomBetAmt=0.005;
 let timerIv=null;
 let prevLevel=1;
@@ -1189,15 +1189,15 @@ async function vote(id,side){
 
 // ── SPEED ─────────────────────────────────
 function selSpeedMode(mode){
-  selSpeedMode_=mode;
   document.getElementById('smA').classList.toggle('sel',mode==='math');
   document.getElementById('smB').classList.toggle('sel',mode==='word');
+  currentSpeedMode=mode;
 }
-let selSpeedMode_='math';
+let currentSpeedMode='math';
 
 function startSpeed(){
   if(!pStats.registered){toast('Register first!',true);nav('profile');return;}
-  speed={mode:selSpeedMode_,bet:selSpeedBet,score:0,streak:0,timer:60,iv:null,xp:0,earned:0};
+  speed={mode:currentSpeedMode,bet:selSpeedBet,score:0,streak:0,timer:60,iv:null,xp:0,earned:0};
   nav('speed');
   document.getElementById('spdInput').value='';
   document.getElementById('spdInput').focus();
