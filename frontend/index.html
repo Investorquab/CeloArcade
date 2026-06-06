@@ -806,7 +806,7 @@ nav::-webkit-scrollbar{display:none;}
 
 <!-- ════ PROFILE ════ -->
 <div class="screen" id="screen-profile">
-  <div id="regSection" style="display:none">
+  <div id="regSection">
     <div class="reg-card">
       <h3>🎮 JOIN CELOARCADE</h3>
       <p>Register your wallet to start playing. You'll receive <strong>0.05 CELO</strong> gas from the contract — completely free. No deposit needed to begin.</p>
@@ -851,7 +851,7 @@ nav::-webkit-scrollbar{display:none;}
 // ══════════════════════════════════════════
 // CONFIG — update after deploy
 // ══════════════════════════════════════════
-const CONTRACT_ADDRESS = "YOUR_CONTRACT_ADDRESS";
+const CONTRACT_ADDRESS = "0x104E6D889875c5bac04c6a17cfb66d74b4638e95";
 const ABI = [
   "function register(address referrer) external",
   "function playGame(uint8 gameType, uint8 category, bool won, uint256 xpToAward) external payable",
@@ -1014,8 +1014,14 @@ async function loadPlayer(){
     const bal=await provider.getBalance(addr);
     document.getElementById('celoVal').textContent=parseFloat(ethers.formatEther(bal)).toFixed(3);
     const reg=await contract.isRegistered(addr);
-    if(!reg){document.getElementById('regPopup').classList.add('show');return;}
-    document.getElementById('regSection').style.display='none';document.getElementById('profContent').style.display='block';
+    if(!reg){
+      document.getElementById('regSection').style.display='block';
+      document.getElementById('profContent').style.display='none';
+      document.getElementById('regPopup').classList.add('show');
+      return;
+    }
+    document.getElementById('regSection').style.display='none';
+    document.getElementById('profContent').style.display='block';
     const p=await contract.getPlayer(addr);
     prevLevel=pStats.level;
     pStats={games:Number(p[0]),wins:Number(p[1]),earned:parseFloat(ethers.formatEther(p[2])),xp:Number(p[3]),level:Number(p[4]),streak:Number(p[5]),refs:Number(p[6]),registered:true};
