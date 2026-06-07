@@ -1098,7 +1098,6 @@ function renderQ(){
   document.getElementById('qCat').textContent=quiz.cat;
   document.getElementById('progFill').style.width=`${(n/t)*100}%`;
   document.getElementById('qText').textContent=q.q;
-  document.getElementById('betDisplay').textContent=quiz.bet+' CELO';
   document.getElementById('resultFlash').style.display='none';
   const mult=pStats.streak>=7?'×1.2':pStats.streak>=3?'×1.1':'×1.0';
   document.getElementById('qStreak').textContent='🔥 '+pStats.streak;
