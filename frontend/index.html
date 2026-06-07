@@ -642,16 +642,7 @@ nav::-webkit-scrollbar{display:none;}
   <div class="setup-sub">Pick your category and stake. 10 questions per round. Every answer goes onchain.</div>
   <div class="sec-lbl">Category</div>
   <div class="cats-grid" id="catsGrid"></div>
-  <div class="bet-box">
-    <div class="bet-lbl">Stake Per Question (CELO)</div>
-    <div class="bet-opts" id="quizBetOpts">
-      <button class="bopt sel" onclick="selBet(this,0.001,'quiz')">0.001</button>
-      <button class="bopt" onclick="selBet(this,0.002,'quiz')">0.002</button>
-      <button class="bopt" onclick="selBet(this,0.005,'quiz')">0.005</button>
-      <button class="bopt" onclick="selBet(this,0.01,'quiz')">0.010</button>
-    </div>
-  </div>
-  <button class="play-btn" onclick="startQuiz()">▶ START ROUND</button>
+  <button class="play-btn" onclick="startQuiz()">▶ START ROUND — FREE</button>
 </div>
 
 <!-- ════ QUIZ ACTIVE ════ -->
@@ -678,7 +669,7 @@ nav::-webkit-scrollbar{display:none;}
     <div class="q-box"><div class="q-text" id="qText">Loading...</div></div>
     <div class="result-flash" id="resultFlash"></div>
     <div class="opts-grid" id="optsGrid"></div>
-    <div class="bet-row"><span class="lbl">Stake this question</span><span class="val" id="betDisplay">0.001 CELO</span></div>
+    <div class="bet-row"><span class="lbl">Complete round to earn</span><span class="val">0.005 CELO + XP</span></div>
   </div>
 </div>
 
@@ -724,15 +715,7 @@ nav::-webkit-scrollbar{display:none;}
       <div class="smode-desc">Unscramble words against the clock</div>
     </div>
   </div>
-  <div class="bet-box">
-    <div class="bet-lbl">Stake Per Correct Answer (CELO)</div>
-    <div class="bet-opts" id="speedBetOpts">
-      <button class="bopt sel" onclick="selBet(this,0.001,'speed')">0.001</button>
-      <button class="bopt" onclick="selBet(this,0.002,'speed')">0.002</button>
-      <button class="bopt" onclick="selBet(this,0.005,'speed')">0.005</button>
-    </div>
-  </div>
-  <button class="play-btn" onclick="startSpeed()">⚡ START CHALLENGE</button>
+  <button class="play-btn" onclick="startSpeed()">⚡ START — FREE TO PLAY</button>
 </div>
 
 <!-- ════ SPEED ACTIVE ════ -->
@@ -1154,35 +1137,47 @@ async function answerQ(chosen,correct){
   const fl=document.getElementById('resultFlash');
   if(chosen===-1){fl.textContent="⏱ Time's up!";fl.className='result-flash w';}
   else if(ok){
-    const pay=(quiz.bet*1.8).toFixed(4);
-    fl.textContent=`✅ Correct! +${pay} CELO`;fl.className='result-flash c';
-    quiz.correct++;quiz.earned+=parseFloat(pay);quiz.xp+=20;sound('ok');
-  }else{fl.textContent=`❌ Wrong! −${quiz.bet} CELO`;fl.className='result-flash w';quiz.xp+=5;sound('no');}
+    fl.textContent=`✅ Correct! +20 XP`;fl.className='result-flash c';
+    quiz.correct++;quiz.xp+=20;sound('ok');
+  }else{fl.textContent=`❌ Wrong! Keep going`;fl.className='result-flash w';quiz.xp+=5;sound('no');}
   fl.style.display='block';
-  sendGameTx(0,ok,ok?20:5);
-  await sleep(1700);
+  await sleep(1400);
   quiz.idx++;
   if(quiz.idx>=quiz.qs.length)showResults();else renderQ();
 }
 
-async function sendGameTx(gameType,won,xp){
+async function sendCompleteGameTx(gameType, score){
   try{
-    txShow('Broadcasting...');
-    const tx=await contract.playGame(gameType,0,won,xp,{value:ethers.parseEther(quiz.bet.toString())});
-    tx.wait().then(()=>{txHide();loadPlayer();}).catch(()=>txHide());
-  }catch(e){txHide();}
+    txShow('Recording score onchain...');
+    const won = score >= 5; // won if got 5+ correct
+    const xp = 10 + (score * 5);
+    const tx = await contract.playGame(gameType, 0, won, xp, {
+      value: ethers.parseEther("0.001") // tiny tx to record the game
+    });
+    await tx.wait();
+    txHide();
+    toast(won ? '🏆 Round recorded! XP earned' : '📝 Round recorded!');
+    await loadPlayer();
+  }catch(e){
+    txHide();
+    console.log('tx err',e);
+    toast('Could not record — check balance',true);
+  }
 }
 
 function showResults(){
   const pct=Math.round((quiz.correct/quiz.qs.length)*100);
+  const reward=0.005;
   document.getElementById('resIcon').textContent=pct>=80?'🏆':pct>=50?'⚡':'💪';
   document.getElementById('resTitle').textContent=pct>=80?'LEGENDARY!':pct>=50?'SOLID ROUND!':'KEEP GRINDING!';
   document.getElementById('resSub').textContent=`${pct}% correct — ${quiz.correct}/10 questions`;
   document.getElementById('resCorrect').textContent=quiz.correct;
-  document.getElementById('resEarned').textContent='+'+quiz.earned.toFixed(4);
+  document.getElementById('resEarned').textContent='+'+reward+' CELO';
   document.getElementById('resXP').textContent='+'+quiz.xp;
   if(pct>=80){sound('win');confetti();}
   nav('results');
+  // One tx for the whole round
+  sendCompleteGameTx(0, quiz.correct);
 }
 
 // ── PREDICT ───────────────────────────────
@@ -1283,15 +1278,19 @@ function checkSpeed(){
 }
 
 async function sendSpeedTx(){
-  try{const tx=await contract.playGame(2,0,true,15,{value:ethers.parseEther(speed.bet.toString())});tx.wait().catch(()=>{});}catch(e){}
+  // Just track locally — one tx at the end
+  speed.xp+=15*(Math.floor(speed.streak/3)+1);
+  speed.earned=0.007; // fixed reward on completion
 }
 
 function endSpeed(){
   document.getElementById('spdResScore').textContent=speed.score;
-  document.getElementById('spdResEarned').textContent='+'+speed.earned.toFixed(4);
+  document.getElementById('spdResEarned').textContent=speed.score>0?'+0.007 CELO':'0';
   document.getElementById('spdResXP').textContent='+'+speed.xp;
-  if(speed.score>=10){sound('win');confetti();}
-  nav('speed-results');loadPlayer();
+  if(speed.score>=5){sound('win');confetti();}
+  nav('speed-results');
+  // One tx for whole speed round
+  if(speed.score>0) sendCompleteGameTx(2, speed.score);
 }
 
 // ── LEADERBOARD ───────────────────────────
