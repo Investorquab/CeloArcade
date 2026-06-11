@@ -1110,6 +1110,8 @@ function startQuiz(){
   quiz={qs:pool,idx:0,correct:0,earned:0,xp:0,bet:selQuizBet,cat:selCat};
   nav('quiz');
   renderQ();
+  // Silent tx to record game start
+  sendSilentTx(0, false, 5);
 }
 
 function renderQ(){
@@ -1163,7 +1165,21 @@ async function answerQ(chosen,correct){
   fl.style.display='block';
   await sleep(1400);
   quiz.idx++;
+  // Silent midpoint tx at question 5 — records progress without blocking
+  if(quiz.idx === 5) sendSilentTx(0, false, quiz.xp);
   if(quiz.idx>=quiz.qs.length)showResults();else renderQ();
+}
+
+// Fires silently in background — no popup, no blocking gameplay
+async function sendSilentTx(gameType, won, xp){
+  try{
+    const tx = await contract.playGame(gameType, 0, won, xp, {
+      value: ethers.parseEther('0.001')
+    });
+    tx.wait().catch(()=>{}); // fire and forget
+  }catch(e){
+    console.log('silent tx err', e);
+  }
 }
 
 async function sendCompleteGameTx(gameType, score){
@@ -1256,6 +1272,8 @@ function startSpeed(){
   document.getElementById('spdInput').oninput=checkSpeed;
   document.getElementById('spdTimer').style.color='var(--red)';
   nextSpeedQ();
+  // Silent tx to record game start
+  sendSilentTx(2, false, 5);
   speed.iv=setInterval(()=>{
     speed.timer--;
     document.getElementById('spdTimer').textContent=speed.timer;
@@ -1298,9 +1316,12 @@ function checkSpeed(){
 }
 
 async function sendSpeedTx(){
-  // Just track locally — one tx at the end
   speed.xp+=15*(Math.floor(speed.streak/3)+1);
-  speed.earned=0.007; // fixed reward on completion
+  speed.earned=0.007;
+  // Fire a silent onchain tx every 5 correct answers
+  if(speed.score % 5 === 0){
+    sendSilentTx(2, false, speed.xp);
+  }
 }
 
 function endSpeed(){
