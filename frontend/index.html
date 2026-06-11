@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>CeloArcade — Onchain Game Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/viem@2.21.54/dist/viem.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -935,18 +935,7 @@ const MATH = [
 ];
 
 // ── STATE ─────────────────────────────────
-// ── VIEM SETUP ────────────────────────────
-const celoChain = {
-  id: 42220,
-  name: 'Celo Mainnet',
-  nativeCurrency: { name: 'CELO', symbol: 'CELO', decimals: 18 },
-  rpcUrls: { default: { http: ['https://forno.celo.org'] } },
-  blockExplorers: { default: { name: 'Celo Explorer', url: 'https://explorer.celo.org/mainnet' } },
-};
-
-let walletClient = null, publicClient = null, addr = null;
-// kept for compat — no longer used
-let provider = null, signer = null, contract = null;
+let provider = null, signer = null, contract = null, addr = null;
 let pStats={games:0,wins:0,earned:0,xp:0,level:1,streak:0,refs:0,registered:false};
 let quiz={qs:[],idx:0,correct:0,earned:0,xp:0,bet:0.001,cat:''};
 let speed={mode:'math',bet:0.001,score:0,streak:0,timer:60,iv:null,xp:0,earned:0};
@@ -977,22 +966,19 @@ async function connectWallet(){
     const eth = window.ethereum;
     if(!eth){toast('Install MetaMask or use MiniPay',true);return;}
 
-    // MiniPay detection — it auto-provides the account, no popup needed
     const isMiniPay = !!eth.isMiniPay;
 
     // Request accounts
-    const accounts = await eth.request({method:'eth_requestAccounts'});
-    addr = accounts[0];
+    await eth.request({method:'eth_requestAccounts'});
 
-    // Switch / add Celo chain (MiniPay is already on Celo, skip for it)
+    // Switch to Celo — skip for MiniPay (already on Celo)
     if(!isMiniPay){
       try{
         await eth.request({method:'wallet_switchEthereumChain',params:[{chainId:'0xA4EC'}]});
       }catch(e){
         if(e.code===4902){
           await eth.request({method:'wallet_addEthereumChain',params:[{
-            chainId:'0xA4EC',
-            chainName:'Celo Mainnet',
+            chainId:'0xA4EC',chainName:'Celo Mainnet',
             nativeCurrency:{name:'CELO',symbol:'CELO',decimals:18},
             rpcUrls:['https://forno.celo.org'],
             blockExplorerUrls:['https://explorer.celo.org/mainnet']
@@ -1001,16 +987,11 @@ async function connectWallet(){
       }
     }
 
-    // Set up viem clients
-    walletClient = viem.createWalletClient({
-      account: addr,
-      chain: celoChain,
-      transport: viem.custom(eth),
-    });
-    publicClient = viem.createPublicClient({
-      chain: celoChain,
-      transport: viem.http('https://forno.celo.org'),
-    });
+    provider = new ethers.BrowserProvider(eth);
+    const accounts = await provider.send('eth_requestAccounts',[]);
+    addr = accounts[0];
+    signer = await provider.getSigner(addr);
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
     document.getElementById('connectBtn').style.display='none';
     document.getElementById('walletPill').style.display='flex';
@@ -1034,11 +1015,9 @@ async function connectWallet(){
 
 async function loadPlayer(){
   try{
-    const bal = await publicClient.getBalance({address: addr});
-    document.getElementById('celoVal').textContent = parseFloat(viem.formatEther(bal)).toFixed(3);
-    const reg = await publicClient.readContract({
-      address: CONTRACT_ADDRESS, abi: ABI, functionName: 'isRegistered', args: [addr]
-    });
+    const bal=await provider.getBalance(addr);
+    document.getElementById('celoVal').textContent=parseFloat(ethers.formatEther(bal)).toFixed(3);
+    const reg=await contract.isRegistered(addr);
     if(!reg){
       document.getElementById('regSection').style.display='block';
       document.getElementById('profContent').style.display='none';
@@ -1047,16 +1026,9 @@ async function loadPlayer(){
     }
     document.getElementById('regSection').style.display='none';
     document.getElementById('profContent').style.display='block';
-    const p = await publicClient.readContract({
-      address: CONTRACT_ADDRESS, abi: ABI, functionName: 'getPlayer', args: [addr]
-    });
-    prevLevel = pStats.level;
-    pStats = {
-      games: Number(p[0]), wins: Number(p[1]),
-      earned: parseFloat(viem.formatEther(p[2])),
-      xp: Number(p[3]), level: Number(p[4]),
-      streak: Number(p[5]), refs: Number(p[6]), registered: true
-    };
+    const p=await contract.getPlayer(addr);
+    prevLevel=pStats.level;
+    pStats={games:Number(p[0]),wins:Number(p[1]),earned:parseFloat(ethers.formatEther(p[2])),xp:Number(p[3]),level:Number(p[4]),streak:Number(p[5]),refs:Number(p[6]),registered:true};
     updateAllStats();
   }catch(e){console.log(e);}
 }
@@ -1092,7 +1064,7 @@ function updateAllStats(){
 }
 
 function disconnectWallet(){
-  walletClient=null;publicClient=null;addr=null;
+  provider=null;signer=null;contract=null;addr=null;
   pStats={games:0,wins:0,earned:0,xp:0,level:1,streak:0,refs:0,registered:false};
   ['connectBtn'].forEach(id=>document.getElementById(id).style.display='flex');
   ['walletPill','celoBal','xpWrap','streakPill','meBtn','disconnectBtn','homePlayer'].forEach(id=>document.getElementById(id).style.display='none');
@@ -1101,18 +1073,16 @@ function disconnectWallet(){
 }
 
 async function registerPlayer(){
-  if(!walletClient){toast('Connect wallet first',true);return;}
+  if(!contract){toast('Connect wallet first',true);return;}
   try{
     txShow('Registering...');
-    const ref = localStorage.getItem('ref') || viem.zeroAddress;
-    const hash = await walletClient.writeContract({
-      address: CONTRACT_ADDRESS, abi: ABI, functionName: 'register', args: [ref]
-    });
-    await publicClient.waitForTransactionReceipt({hash});
+    const ref=localStorage.getItem('ref')||ethers.ZeroAddress;
+    const tx=await contract.register(ref);
+    await tx.wait();
     txHide();toast('🎮 Registered! 0.05 CELO sent!');sound('win');confetti();
     document.getElementById('regPopup').classList.remove('show');
     await loadPlayer();
-  }catch(e){txHide();toast(e.shortMessage||e.message||'Failed',true);}
+  }catch(e){txHide();toast(e.reason||e.message||'Failed',true);}
 }
 
 // ── QUIZ ──────────────────────────────────
@@ -1201,13 +1171,10 @@ async function sendCompleteGameTx(gameType, score){
     txShow('Recording score onchain...');
     const won = score >= 5;
     const xp = 10 + (score * 5);
-    const hash = await walletClient.writeContract({
-      address: CONTRACT_ADDRESS, abi: ABI,
-      functionName: 'playGame',
-      args: [gameType, 0, won, xp],
-      value: viem.parseEther('0.001'),
+    const tx = await contract.playGame(gameType, 0, won, xp, {
+      value: ethers.parseEther('0.001')
     });
-    await publicClient.waitForTransactionReceipt({hash});
+    await tx.wait();
     txHide();
     toast(won ? '🏆 Round recorded! XP earned' : '📝 Round recorded!');
     await loadPlayer();
@@ -1235,19 +1202,15 @@ function showResults(){
 
 // ── PREDICT ───────────────────────────────
 async function loadPredictions(){
-  if(!publicClient)return;
+  if(!contract)return;
   const list=document.getElementById('predList');
   try{
-    const count = Number(await publicClient.readContract({
-      address: CONTRACT_ADDRESS, abi: ABI, functionName: 'predictionCount'
-    }));
+    const count=Number(await contract.predictionCount());
     if(count===0){list.innerHTML='<div class="no-pred"><div class="ni">🔮</div>Daily predictions coming soon! Check back tomorrow.</div>';return;}
     list.innerHTML='';
     for(let i=count-1;i>=Math.max(0,count-5);i--){
-      const p = await publicClient.readContract({
-        address: CONTRACT_ADDRESS, abi: ABI, functionName: 'getPrediction', args: [i]
-      });
-      const y=parseFloat(viem.formatEther(p[2])),no=parseFloat(viem.formatEther(p[3]));
+      const p=await contract.getPrediction(i);
+      const y=parseFloat(ethers.formatEther(p[2])),no=parseFloat(ethers.formatEther(p[3]));
       const tot=y+no;const yp=tot>0?Math.round((y/tot)*100):50;const np=100-yp;
       const dl=new Date(Number(p[4])*1000);const resolved=p[5];
       const card=document.createElement('div');card.className='pred-card';
@@ -1271,14 +1234,9 @@ async function vote(id,side){
   if(!pStats.registered){toast('Register first!',true);return;}
   try{
     txShow('Voting onchain...');
-    const hash = await walletClient.writeContract({
-      address: CONTRACT_ADDRESS, abi: ABI,
-      functionName: 'votePrediction', args: [id, side],
-      value: viem.parseEther('0.005'),
-    });
-    await publicClient.waitForTransactionReceipt({hash});
-    txHide();toast('🎯 Vote recorded!');sound('ok');loadPredictions();
-  }catch(e){txHide();toast(e.shortMessage||e.message||'Failed',true);}
+    const tx=await contract.votePrediction(id,side,{value:ethers.parseEther('0.005')});
+    await tx.wait();txHide();toast('🎯 Vote recorded!');sound('ok');loadPredictions();
+  }catch(e){txHide();toast(e.reason||e.message||'Failed',true);}
 }
 
 // ── SPEED ─────────────────────────────────
@@ -1357,11 +1315,9 @@ function endSpeed(){
 
 // ── LEADERBOARD ───────────────────────────
 async function loadLeaderboard(){
-  if(!publicClient)return;
+  if(!contract)return;
   try{
-    const [addrs,xps,lvls,games] = await publicClient.readContract({
-      address: CONTRACT_ADDRESS, abi: ABI, functionName: 'getLeaderboard', args: [20]
-    });
+    const [addrs,xps,lvls,games]=await contract.getLeaderboard(20);
     const medals=['🥇','🥈','🥉'];
     const list=document.getElementById('lbList');list.innerHTML='';
     if(addrs.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:60px;font-family:var(--display);font-size:0.8rem;letter-spacing:2px">NO PLAYERS YET<br><span style="font-size:0.6rem;margin-top:8px;display:block">BE THE FIRST</span></div>';return;}
@@ -1387,22 +1343,18 @@ async function loadLeaderboard(){
 
 // ── ROOMS ─────────────────────────────────
 async function loadRooms(){
-  if(!publicClient)return;
+  if(!contract)return;
   try{
-    const ids = await publicClient.readContract({
-      address: CONTRACT_ADDRESS, abi: ABI, functionName: 'getActiveRooms'
-    });
+    const ids=await contract.getActiveRooms();
     const list=document.getElementById('roomList');list.innerHTML='';
     if(ids.length===0){list.innerHTML='<div style="color:var(--muted);text-align:center;padding:30px;font-family:var(--display);font-size:0.72rem;letter-spacing:2px">NO OPEN ROOMS</div>';return;}
     for(const id of ids){
-      const r = await publicClient.readContract({
-        address: CONTRACT_ADDRESS, abi: ABI, functionName: 'rooms', args: [id]
-      });
+      const r=await contract.rooms(id);
       const names=['🧠 QUIZBLITZ','🎯 PREDICT','⚡ SPEED'];
       const card=document.createElement('div');card.className='room-card';
       card.innerHTML=`
         <div><div class="room-game">${names[r[3]]||'GAME'}</div><div class="room-creator">by ${short(r[0])}</div></div>
-        <div class="room-bet">${parseFloat(viem.formatEther(r[2])).toFixed(3)} CELO</div>
+        <div class="room-bet">${parseFloat(ethers.formatEther(r[2])).toFixed(3)} CELO</div>
         <button class="join-btn" onclick="joinRoom('${id}','${r[2]}')">JOIN ⚔️</button>
       `;
       list.appendChild(card);
@@ -1415,28 +1367,12 @@ function selRoomBet(el,v){selRoomBetAmt=v;document.querySelectorAll('#roomBetOpt
 
 async function createRoom(){
   if(!pStats.registered){toast('Register first!',true);return;}
-  try{
-    txShow('Creating room...');
-    const hash = await walletClient.writeContract({
-      address: CONTRACT_ADDRESS, abi: ABI,
-      functionName: 'createRoom', args: [selRoomGameType, 0],
-      value: viem.parseEther(selRoomBetAmt.toString()),
-    });
-    await publicClient.waitForTransactionReceipt({hash});
-    txHide();toast('⚔️ Room created!');sound('ok');loadRooms();
-  }catch(e){txHide();toast(e.shortMessage||e.message||'Failed',true);}
+  try{txShow('Creating room...');const tx=await contract.createRoom(selRoomGameType,0,{value:ethers.parseEther(selRoomBetAmt.toString())});await tx.wait();txHide();toast('⚔️ Room created!');sound('ok');loadRooms();}
+  catch(e){txHide();toast(e.reason||e.message||'Failed',true);}
 }
 async function joinRoom(id,bet){
-  try{
-    txShow('Joining...');
-    const hash = await walletClient.writeContract({
-      address: CONTRACT_ADDRESS, abi: ABI,
-      functionName: 'joinRoom', args: [id],
-      value: bet, // already a bigint from the contract read
-    });
-    await publicClient.waitForTransactionReceipt({hash});
-    txHide();toast('⚔️ Joined!');sound('ok');loadRooms();
-  }catch(e){txHide();toast(e.shortMessage||e.message||'Failed',true);}
+  try{txShow('Joining...');const tx=await contract.joinRoom(id,{value:bet});await tx.wait();txHide();toast('⚔️ Joined!');sound('ok');loadRooms();}
+  catch(e){txHide();toast(e.reason||e.message||'Failed',true);}
 }
 
 // ── LEVEL UP ──────────────────────────────
