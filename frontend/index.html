@@ -1104,13 +1104,30 @@ function selBet(el,v,type){
   if(type==='quiz')selQuizBet=v;else selSpeedBet=v;
 }
 
-function startQuiz(){
+async function startQuiz(){
   if(!pStats.registered){toast('Register first on Profile!',true);nav('profile');return;}
-  const pool=[...QDB[selCat]].sort(()=>Math.random()-0.5).slice(0,10);
-  quiz={qs:pool,idx:0,correct:0,earned:0,xp:0,bet:selQuizBet,cat:selCat};
   nav('quiz');
+  // Show loading state while fetching questions
+  document.getElementById('qText').textContent='Loading questions...';
+  document.getElementById('qNum').textContent='...';
+  document.querySelectorAll('.opt-btn').forEach(b=>{b.textContent='...';b.disabled=true;});
+
+  let pool;
+  try{
+    const catLabel = selCat.replace(/^[^\w]+/,'').trim(); // strip emoji
+    const r = await fetch(`/api/questions?cat=${encodeURIComponent(catLabel)}`);
+    if(!r.ok) throw new Error('API error');
+    const data = await r.json();
+    if(!data.questions || data.questions.length < 5) throw new Error('Bad data');
+    pool = data.questions.slice(0,10);
+    toast('🤖 Fresh AI questions loaded!');
+  }catch(e){
+    // Fallback to local QDB silently
+    pool = [...QDB[selCat]].sort(()=>Math.random()-0.5).slice(0,10);
+  }
+
+  quiz={qs:pool,idx:0,correct:0,earned:0,xp:0,bet:selQuizBet,cat:selCat};
   renderQ();
-  // Silent tx to record game start
   sendSilentTx(0, false, 5);
 }
 
