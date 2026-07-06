@@ -447,6 +447,8 @@ nav::-webkit-scrollbar{display:none;}
   <button class="nav-btn" onclick="nav('speed-setup')">⚡ Speed</button>
   <button class="nav-btn" onclick="nav('rooms')">⚔️ 1v1</button>
   <button class="nav-btn" onclick="nav('leaderboard')">🏆 Board</button>
+  <button class="nav-btn" onclick="nav('faucet')">💧 Faucet</button>
+  <button class="nav-btn" onclick="nav('badges')">🏅 Badges</button>
 </nav>
 
 <!-- ════ HOME ════ -->
@@ -831,11 +833,103 @@ nav::-webkit-scrollbar{display:none;}
   </div>
 </div>
 
+<!-- ════ FAUCET SCREEN ════ -->
+<div class="screen" id="screen-faucet">
+  <div class="setup-hdr">💧 CELO FAUCET</div>
+  <div class="setup-sub">Get 0.1 CELO free every day to play games. No wallet connection needed — just paste your address.</div>
+
+  <div style="background:linear-gradient(135deg,rgba(0,255,136,0.06),rgba(0,200,255,0.06));border:1px solid rgba(0,255,136,0.25);border-radius:20px;padding:28px;margin-bottom:20px">
+    <div style="font-family:var(--display);font-size:0.65rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Your Celo Wallet Address</div>
+    <input id="faucetInput" type="text" placeholder="0x..."
+      style="width:100%;background:var(--s2);border:2px solid var(--border2);color:var(--text);padding:16px 18px;border-radius:14px;font-family:var(--mono);font-size:0.85rem;outline:none;margin-bottom:14px;transition:border-color 0.2s"
+      onfocus="this.style.borderColor='var(--g)'" onblur="this.style.borderColor='var(--border2)'"/>
+    <button onclick="claimFaucet()" class="play-btn" style="font-size:0.85rem">💧 CLAIM 0.1 CELO — FREE</button>
+    <div style="margin-top:14px;font-size:0.72rem;color:var(--muted);text-align:center">
+      Delivered within 5 minutes · Claim once every 24 hours
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+      <div style="font-family:var(--display);font-size:1.2rem;font-weight:900;color:var(--g)">0.1</div>
+      <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px">CELO Daily</div>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+      <div style="font-family:var(--display);font-size:1.2rem;font-weight:900;color:var(--b)">500+</div>
+      <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Games</div>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+      <div style="font-family:var(--display);font-size:1.2rem;font-weight:900;color:var(--gold)">24h</div>
+      <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Cooldown</div>
+    </div>
+  </div>
+
+  <div style="background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:20px">
+    <div style="font-family:var(--display);font-size:0.65rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px">How It Works</div>
+    <div style="display:flex;flex-direction:column;gap:10px;font-size:0.82rem;color:var(--muted);line-height:1.6">
+      <div>1️⃣ Paste your Celo wallet address above</div>
+      <div>2️⃣ Click Claim — request goes to our bot</div>
+      <div>3️⃣ 0.1 CELO arrives in your wallet within 5 minutes</div>
+      <div>4️⃣ Use it to play Quiz, Speed Run, and 1v1 battles</div>
+      <div>5️⃣ Come back tomorrow and claim again</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ BADGES SCREEN ════ -->
+<div class="screen" id="screen-badges">
+  <div class="setup-hdr">🏅 ARCADE BADGES</div>
+  <div class="setup-sub">Earn onchain NFT badges by hitting milestones. Each mint is a permanent record on Celo.</div>
+
+  <div id="badgesGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+    <div style="color:var(--muted);text-align:center;grid-column:span 2;padding:40px">Connect wallet to view your badges</div>
+  </div>
+
+  <div style="background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:20px">
+    <div style="font-family:var(--display);font-size:0.65rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Badge Milestones</div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:0.8rem;color:var(--muted)">
+      <div style="display:flex;justify-content:space-between"><span>🩸 First Blood</span><span style="color:var(--g)">Play 1 game</span></div>
+      <div style="display:flex;justify-content:space-between"><span>⭐ Rising Star</span><span style="color:var(--g)">Reach Level 5</span></div>
+      <div style="display:flex;justify-content:space-between"><span>👑 Arcade Legend</span><span style="color:var(--g)">Reach Level 10</span></div>
+      <div style="display:flex;justify-content:space-between"><span>🔥 Week Warrior</span><span style="color:var(--g)">7-day streak</span></div>
+      <div style="display:flex;justify-content:space-between"><span>🎮 Dedicated Player</span><span style="color:var(--g)">50 games played</span></div>
+      <div style="display:flex;justify-content:space-between"><span>💯 Century Club</span><span style="color:var(--g)">100 games played</span></div>
+      <div style="display:flex;justify-content:space-between"><span>⚡ Speed King</span><span style="color:var(--g)">Complete Speed Run</span></div>
+      <div style="display:flex;justify-content:space-between"><span>🧠 Quiz Master</span><span style="color:var(--g)">Complete Quiz Round</span></div>
+      <div style="display:flex;justify-content:space-between"><span>🌱 Early Adopter</span><span style="color:var(--g)">Among first players</span></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════════
 // CONFIG — update after deploy
 // ══════════════════════════════════════════
 const CONTRACT_ADDRESS = "0x104E6D889875c5bac04c6a17cfb66d74b4638e95";
+const FAUCET_ADDRESS  = "0x3C308BA47FaB3f7Fe17c4b5D9EB30FDd61d5CF14";   // fill after deploy
+const REWARDS_ADDRESS = "0x40215A0965596e1831bB9e5a6A0cc0E161A87599";  // fill after deploy
+const BADGES_ADDRESS  = "0x4104478c3AFe9A50e30E51Ac2BD93Cb4aFA7A079";   // fill after deploy
+
+const FAUCET_ABI = [
+  "function canClaim(address) external view returns (bool, uint256)",
+  "function hasClaimed(address) external view returns (bool)",
+  "function getStats() external view returns (uint256,uint256,uint256,uint256)",
+];
+
+const REWARDS_ABI = [
+  "function totalEarned(address) external view returns (uint256)",
+  "function winStreak(address) external view returns (uint256)",
+  "function getStats() external view returns (uint256,uint256,uint256,uint256)",
+];
+
+const BADGES_ABI = [
+  "function mintBadges(uint8[] calldata badgeTypes) external",
+  "function hasBadge(address, uint8) external view returns (bool)",
+  "function getPlayerBadges(address) external view returns (uint256[])",
+  "function getEligibleBadges(address,uint256,uint256,uint256) external view returns (uint8[])",
+  "function getStats() external view returns (uint256,uint256,uint256[9])",
+];
+
 const ABI = [
   "function register(address referrer) external",
   "function playGame(uint8 gameType, uint8 category, bool won, uint256 xpToAward) external payable",
@@ -992,6 +1086,7 @@ async function connectWallet(){
     addr = accounts[0];
     signer = await provider.getSigner(addr);
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    initNewContracts();
 
     document.getElementById('connectBtn').style.display='none';
     document.getElementById('walletPill').style.display='flex';
@@ -1191,9 +1286,10 @@ async function answerQ(chosen,correct){
 async function sendSilentTx(gameType, won, xp){
   try{
     const tx = await contract.playGame(gameType, 0, won, xp, {
-      value: ethers.parseEther('0.001')
+      value:    ethers.parseEther('0.0001'), // reduced from 0.001
+      gasPrice: ethers.parseUnits('5','gwei'), // 5 gwei = ~0.0003 CELO fee (was 0.014)
     });
-    tx.wait().catch(()=>{}); // fire and forget
+    tx.wait().catch(()=>{});
   }catch(e){
     console.log('silent tx err', e);
   }
@@ -1203,13 +1299,15 @@ async function sendCompleteGameTx(gameType, score){
   try{
     txShow('Recording score onchain...');
     const won = score >= 5;
-    const xp = 10 + (score * 5);
-    const tx = await contract.playGame(gameType, 0, won, xp, {
-      value: ethers.parseEther('0.001')
+    const xp  = 10 + (score * 5);
+    const tx  = await contract.playGame(gameType, 0, won, xp, {
+      value:    ethers.parseEther('0.0001'), // reduced from 0.001
+      gasPrice: ethers.parseUnits('5','gwei'), // 5 gwei = ~0.0003 CELO fee
     });
     await tx.wait();
     txHide();
     toast(won ? '🏆 Round recorded! XP earned' : '📝 Round recorded!');
+    await checkAndMintBadges(); // auto-check badges after every game
     await loadPlayer();
   }catch(e){
     txHide();
@@ -1446,11 +1544,87 @@ function startDailyTimer(){
 }
 
 // ── NAV ───────────────────────────────────
+// ── NEW CONTRACTS ─────────────────────────────────────────────
+let badgesContract, rewardsContract, faucetContract;
+
+function initNewContracts(){
+  if(!signer) return;
+  if(BADGES_ADDRESS  !== "YOUR_BADGES_ADDRESS")  badgesContract  = new ethers.Contract(BADGES_ADDRESS,  BADGES_ABI,  signer);
+  if(REWARDS_ADDRESS !== "YOUR_REWARDS_ADDRESS") rewardsContract = new ethers.Contract(REWARDS_ADDRESS, REWARDS_ABI, signer);
+  if(FAUCET_ADDRESS  !== "0x3C308BA47FaB3f7Fe17c4b5D9EB30FDd61d5CF14")  faucetContract  = new ethers.Contract(FAUCET_ADDRESS,  FAUCET_ABI,  provider);
+}
+
+// ── BADGE SYSTEM ──────────────────────────────────────────────
+const BADGE_INFO = [
+  {id:1, name:"First Blood",      desc:"Play your first game",   icon:"🩸"},
+  {id:2, name:"Rising Star",      desc:"Reach Level 5",          icon:"⭐"},
+  {id:3, name:"Arcade Legend",    desc:"Reach Level 10",         icon:"👑"},
+  {id:4, name:"Week Warrior",     desc:"7-day play streak",      icon:"🔥"},
+  {id:5, name:"Dedicated Player", desc:"Play 50 games",          icon:"🎮"},
+  {id:6, name:"Century Club",     desc:"Play 100 games",         icon:"💯"},
+  {id:7, name:"Speed King",       desc:"Complete Speed Run",     icon:"⚡"},
+  {id:8, name:"Quiz Master",      desc:"Complete Quiz Round",    icon:"🧠"},
+  {id:9, name:"Early Adopter",    desc:"Among first players",    icon:"🌱"},
+];
+
+async function checkAndMintBadges(){
+  if(!badgesContract || !pStats.registered) return;
+  try{
+    const eligible = await badgesContract.getEligibleBadges(
+      addr, pStats.games, pStats.level, pStats.streak
+    );
+    if(eligible.length > 0){
+      const tx = await badgesContract.mintBadges(eligible, {
+        gasPrice: ethers.parseUnits('5','gwei'),
+      });
+      await tx.wait();
+      const names = eligible.map(b => BADGE_INFO.find(x=>x.id===Number(b))?.icon || '🏅').join(' ');
+      toast(`🏅 New badge earned! ${names}`);
+      confetti();
+    }
+  }catch(e){ console.log('badge err',e); }
+}
+
+async function loadBadgesScreen(){
+  const grid = document.getElementById('badgesGrid');
+  if(!grid) return;
+  if(!badgesContract || !addr){ grid.innerHTML='<div style="color:var(--muted);text-align:center;grid-column:span 2;padding:40px">Connect wallet to view badges</div>'; return; }
+
+  grid.innerHTML = '';
+  for(const b of BADGE_INFO){
+    let owned = false;
+    try{ owned = await badgesContract.hasBadge(addr, b.id); }catch(e){}
+    const card = document.createElement('div');
+    card.style.cssText = `background:var(--s1);border:1px solid ${owned?'var(--g)':'var(--border)'};border-radius:16px;padding:20px;text-align:center;opacity:${owned?'1':'0.4'};transition:all 0.2s;`;
+    card.innerHTML = `<div style="font-size:2.5rem;margin-bottom:8px">${b.icon}</div><div style="font-family:var(--display);font-size:0.72rem;font-weight:900;letter-spacing:1px;color:${owned?'var(--g)':'var(--text)'};margin-bottom:4px">${b.name}</div><div style="font-size:0.68rem;color:var(--muted)">${b.desc}</div>${owned?'<div style="font-size:0.65rem;color:var(--g);margin-top:6px">✅ OWNED</div>':''}`;
+    grid.appendChild(card);
+  }
+}
+
+// ── FAUCET ────────────────────────────────────────────────────
+async function claimFaucet(){
+  const input = document.getElementById('faucetInput');
+  const addr_ = input?.value?.trim();
+  if(!addr_ || !addr_.startsWith('0x') || addr_.length !== 42){
+    toast('Enter a valid Celo wallet address (0x...)', true); return;
+  }
+  // Save request — faucet processor picks it up
+  const requests = JSON.parse(localStorage.getItem('faucetRequests')||'[]');
+  const recent = requests.find(r=>r.address.toLowerCase()===addr_.toLowerCase()&&Date.now()-r.timestamp<86400000);
+  if(recent){ toast('Already claimed today! Come back tomorrow', true); return; }
+  requests.push({address:addr_, timestamp:Date.now(), status:'pending'});
+  localStorage.setItem('faucetRequests', JSON.stringify(requests));
+  if(input) input.value = '';
+  toast('✅ Submitted! 0.1 CELO arriving within 5 minutes');
+  sound('ok');
+}
+
 function nav(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const s=document.getElementById('screen-'+name);if(s)s.classList.add('active');
-  const map={home:0,'quiz-setup':1,predict:2,'speed-setup':3,rooms:4,leaderboard:5,profile:-1,quiz:1,results:1,speed:3,'speed-results':3};
+  const map={home:0,'quiz-setup':1,predict:2,'speed-setup':3,rooms:4,leaderboard:5,profile:-1,faucet:6,badges:7,quiz:1,results:1,speed:3,'speed-results':3};
+  if(name==='badges') loadBadgesScreen();
   const idx=map[name];if(idx!==undefined)document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
   if(name==='leaderboard')loadLeaderboard();
   if(name==='rooms')loadRooms();

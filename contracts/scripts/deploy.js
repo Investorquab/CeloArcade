@@ -1,28 +1,29 @@
 const hre = require("hardhat");
 
+const ARCADE   = "0x0d8b87e33C6cFD73ad11a355711A2EDDF9c390a3";
+const FAUCET   = "0x3C308BA47FaB3f7Fe17c4b5D9EB30FDd61d5CF14";
+const REWARDS  = "0x40215A0965596e1831bB9e5a6A0cc0E161A87599";
+
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
-  console.log(`\n🚀 Deploying CeloArcade on Celo Mainnet`);
-  console.log(`   Deployer: ${deployer.address}`);
-  const balance = await hre.ethers.provider.getBalance(deployer.address);
-  console.log(`   Balance: ${hre.ethers.formatEther(balance)} CELO`);
+  const bal = await hre.ethers.provider.getBalance(deployer.address);
+  console.log(`   Balance: ${hre.ethers.formatEther(bal)} CELO\n`);
 
-  const CeloArcade = await hre.ethers.getContractFactory("CeloArcade");
-  const contract = await CeloArcade.deploy({
-    value: hre.ethers.parseEther("19.0") // fund with 19 CELO, keep 2 for gas
-  });
-  await contract.waitForDeployment();
-  const address = await contract.getAddress();
+  console.log(`📦 Deploying ArcadeBadges...`);
+  const Badges = await hre.ethers.getContractFactory("ArcadeBadges");
+  const badges = await Badges.deploy(ARCADE);
+  await badges.waitForDeployment();
+  const badgesAddr = await badges.getAddress();
+  console.log(`   ✅ ArcadeBadges: ${badgesAddr}`);
 
-  console.log(`\n✅ CeloArcade deployed: ${address}`);
-  console.log(`   Funded with: 19 CELO`);
-  console.log(`   Welcome bonuses: covers ~380 new wallets at 0.05 CELO each`);
-  console.log(`\n📋 Next step:`);
-  console.log(`   Open frontend/index.html`);
-  console.log(`   Find: YOUR_CONTRACT_ADDRESS`);
-  console.log(`   Replace with: ${address}`);
-  console.log(`\n🔗 Verify on explorer:`);
-  console.log(`   https://celoscan.io/address/${address}`);
+  console.log(`\n${'═'.repeat(55)}`);
+  console.log(`  ALL 4 CONTRACTS READY:`);
+  console.log(`${'═'.repeat(55)}`);
+  console.log(`  CONTRACT_ADDRESS = "${ARCADE}"`);
+  console.log(`  FAUCET_ADDRESS   = "${FAUCET}"`);
+  console.log(`  REWARDS_ADDRESS  = "${REWARDS}"`);
+  console.log(`  BADGES_ADDRESS   = "${badgesAddr}"`);
+  console.log(`\n  Add all 4 to talent.app`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

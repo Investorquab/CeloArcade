@@ -1,4 +1,3 @@
-// hardhat.config.js
 require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
 
@@ -9,11 +8,7 @@ module.exports = {
       url: "https://forno.celo.org",
       accounts: [process.env.PRIVATE_KEY],
       chainId: 42220,
-    },
-    alfajores: {
-      url: "https://alfajores-forno.celo-testnet.org",
-      accounts: [process.env.PRIVATE_KEY],
-      chainId: 44787,
+      gasPrice: 25000000000, // 25 gwei - Celo minimum
     },
   },
 };
