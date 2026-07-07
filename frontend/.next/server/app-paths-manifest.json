@@ -1,0 +1,4 @@
+{
+  "/api/faucet-claim/route": "app/api/faucet-claim/route.js",
+  "/hub/page": "app/hub/page.js"
+}

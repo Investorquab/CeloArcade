@@ -1,20 +1,35 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount } from "wagmi";
+import { useAccount, useConnect, useSwitchChain, useChainId } from "wagmi";
+import { celo } from "wagmi/chains";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Home() {
   const { isConnected } = useAccount();
+  const { connect, connectors, isPending } = useConnect();
+  const { switchChain } = useSwitchChain();
+  const chainId = useChainId();
   const router = useRouter();
 
-  // Once wallet connects, send them straight to the game hub
+  // Once connected, make sure we're on Celo — if not, switch automatically
   useEffect(() => {
-    if (isConnected) {
+    if (isConnected && chainId !== celo.id) {
+      switchChain({ chainId: celo.id });
+    }
+  }, [isConnected, chainId, switchChain]);
+
+  // Once connected AND on the right network, go to the hub
+  useEffect(() => {
+    if (isConnected && chainId === celo.id) {
       router.push("/hub");
     }
-  }, [isConnected, router]);
+  }, [isConnected, chainId, router]);
+
+  function handleConnect() {
+    const connector = connectors[0]; // the injected connector (MetaMask/MiniPay)
+    connect({ connector });
+  }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
@@ -29,32 +44,17 @@ export default function Home() {
         Play against friends or AI.
       </p>
 
-      <div className="mb-3">
-        <ConnectButton />
-      </div>
-
-      <button className="text-sm text-gray-400 border border-gray-700 rounded-lg px-4 py-2 hover:bg-gray-900 transition">
-        Play as guest (no wallet needed)
+      <button
+        onClick={handleConnect}
+        disabled={isPending}
+        className="bg-blue-600 disabled:bg-gray-700 text-white text-sm font-medium px-6 py-3 rounded-xl mb-3 flex items-center gap-2"
+      >
+        {isPending ? "Connecting..." : "Connect Wallet"}
       </button>
 
-      <div className="flex gap-6 mt-8 text-center">
-        <div>
-          <p className="text-base font-medium">1,204</p>
-          <p className="text-xs text-gray-500">Players</p>
-        </div>
-        <div className="w-px bg-gray-800" />
-        <div>
-          <p className="text-base font-medium">312</p>
-          <p className="text-xs text-gray-500">Live rooms</p>
-        </div>
-        <div className="w-px bg-gray-800" />
-        <div>
-          <p className="text-base font-medium">89K</p>
-          <p className="text-xs text-gray-500">CELO paid out</p>
-        </div>
-      </div>
+      <p className="text-xs text-gray-500 mb-6">Works with MetaMask and MiniPay</p>
 
-      <p className="text-xs text-gray-500 mt-6">🔒 Every match settled onchain</p>
+      <p className="text-xs text-gray-500 mt-2">🔒 Every match settled onchain</p>
     </main>
   );
 }
