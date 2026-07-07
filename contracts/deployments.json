@@ -1,0 +1,12 @@
+{
+  "network": "celo",
+  "deployedAt": "2026-07-07T08:56:51.050Z",
+  "deployer": "0x00d1E86040d88397F4eB187c38dC527F6659e486",
+  "operator": "0x00d1E86040d88397F4eB187c38dC527F6659e486",
+  "contracts": {
+    "ArcadeTournament": "0xedEBd53DDb7Ea6385b7D8F6bF45609dE25EdE8ef",
+    "TournamentBadges": "0xb4b5c8403EA9f3E659f02829F745702A209Bf6f3",
+    "GameRooms": "0xD058ffcC5e04a59CC30C5e7482b5b9cb0910b16c",
+    "BotFaucet": "0x7284CE519bd039c3CD4b5695C661D0e13c6D3CD9"
+  }
+}
