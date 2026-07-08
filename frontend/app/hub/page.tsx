@@ -3,12 +3,13 @@
 import { useAccount, useBalance, useReadContract } from "wagmi";
 import { ADDRESSES, GAME_ROOMS_ABI, BOT_FAUCET_ABI } from "@/lib/contracts";
 import { formatEther } from "viem";
+import Link from "next/link";
 
 const GAMES = [
-  { name: "Quiz Duel", desc: "1v1 · fresh AI questions every match", live: true, icon: "💡" },
-  { name: "Quick Math", desc: "1v1 · fastest correct answer wins", live: true, icon: "🧮" },
-  { name: "Ludo", desc: "2–4 players · vs friends or AI", live: true, icon: "🎲" },
-  { name: "Naija Whot", desc: "Coming soon", live: false, icon: "🃏" },
+  { name: "Ludo", desc: "2–4 players · vs friends or AI", live: true, icon: "🎲", href: "/ludo" },
+  { name: "Quiz Duel", desc: "1v1 · fresh AI questions every match", live: false, icon: "💡", href: "/quiz" },
+  { name: "Quick Math", desc: "1v1 · fastest correct answer wins", live: false, icon: "🧮", href: "/math" },
+  { name: "Naija Whot", desc: "Coming soon", live: false, icon: "🃏", href: "/whot" },
 ];
 
 export default function Hub() {
@@ -68,29 +69,39 @@ export default function Hub() {
       <p className="text-sm font-medium text-gray-400 mb-2.5">Choose a game</p>
 
       <div className="flex flex-col gap-2.5">
-        {GAMES.map((game) => (
-          <div
-            key={game.name}
-            className={`bg-gray-900 border border-gray-800 rounded-2xl p-3.5 flex items-center gap-3.5 ${
-              !game.live ? "opacity-60" : "cursor-pointer hover:bg-gray-850"
-            }`}
-          >
-            <div className="w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center flex-shrink-0 text-xl">
-              {game.icon}
+        {GAMES.map((game) => {
+          const card = (
+            <div
+              key={game.name}
+              className={`bg-gray-900 border border-gray-800 rounded-2xl p-3.5 flex items-center gap-3.5 ${
+                !game.live ? "opacity-60" : "cursor-pointer hover:bg-gray-850"
+              }`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center flex-shrink-0 text-xl">
+                {game.icon}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">{game.name}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{game.desc}</p>
+              </div>
+              {game.live ? (
+                <span className="bg-green-950 text-green-400 text-[10px] font-medium px-2 py-0.5 rounded-full">
+                  LIVE
+                </span>
+              ) : (
+                <span className="text-gray-600">🔒</span>
+              )}
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium">{game.name}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{game.desc}</p>
-            </div>
-            {game.live ? (
-              <span className="bg-green-950 text-green-400 text-[10px] font-medium px-2 py-0.5 rounded-full">
-                LIVE
-              </span>
-            ) : (
-              <span className="text-gray-600">🔒</span>
-            )}
-          </div>
-        ))}
+          );
+
+          return game.live ? (
+            <Link href={game.href} key={game.name}>
+              {card}
+            </Link>
+          ) : (
+            card
+          );
+        })}
       </div>
 
       <div className="mt-4 bg-green-950 rounded-xl px-3.5 py-3 flex justify-between items-center">
