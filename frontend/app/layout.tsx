@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import { NetworkGuard } from "./NetworkGuard";
 
 export const metadata: Metadata = {
   title: "CeloArcade",
@@ -11,7 +12,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <NetworkGuard />
+          {children}
+        </Providers>
       </body>
     </html>
   );

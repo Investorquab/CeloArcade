@@ -6,10 +6,35 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/ludo/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/ludo/page.js"
+      "static/chunks/app/page.js"
+    ],
+    "/hub/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/hub/page.js"
+    ],
+    "/quiz/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/quiz/page.js"
+    ],
+    "/quiz/room/[roomId]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/quiz/room/[roomId]/page.js"
+    ],
+    "/api/generate-question/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/generate-question/route.js"
+    ],
+    "/api/report-winner/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/report-winner/route.js"
     ]
   }
 }

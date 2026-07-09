@@ -66,6 +66,16 @@ export const GAME_ROOMS_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [
+      { name: "id", type: "uint256" },
+      { name: "winner", type: "address" },
+    ],
+    name: "reportWinner",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
 ] as const;
 
 export const BOT_FAUCET_ABI = [

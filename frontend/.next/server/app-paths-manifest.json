@@ -1,3 +1,8 @@
 {
-  "/ludo/page": "app/ludo/page.js"
+  "/api/generate-question/route": "app/api/generate-question/route.js",
+  "/api/report-winner/route": "app/api/report-winner/route.js",
+  "/page": "app/page.js",
+  "/hub/page": "app/hub/page.js",
+  "/quiz/page": "app/quiz/page.js",
+  "/quiz/room/[roomId]/page": "app/quiz/room/[roomId]/page.js"
 }

@@ -30,12 +30,23 @@ export default function LudoLobby() {
     },
   });
 
-  // Re-fetch the open rooms list the moment our create-room tx confirms
+  const { data: liveRoomCount } = useReadContract({
+    address: ADDRESSES.GameRooms,
+    abi: GAME_ROOMS_ABI,
+    functionName: "roomCount",
+    query: { enabled: isSuccess },
+  });
+
+  // Once our create-room tx confirms, the new room's id is roomCount - 1
+  // (ids are assigned sequentially starting at 0)
   useEffect(() => {
     if (isSuccess) {
       refetchOpenRooms();
+      if (liveRoomCount !== undefined && liveRoomCount > 0n) {
+        router.push(`/ludo/room/${liveRoomCount - 1n}`);
+      }
     }
-  }, [isSuccess, refetchOpenRooms]);
+  }, [isSuccess, refetchOpenRooms, liveRoomCount, router]);
 
   function handleCreateRoom() {
     if (!address) return;
@@ -96,14 +107,20 @@ export default function LudoLobby() {
               Play for free
             </button>
             <button
-              onClick={() => { setIsFree(false); setStake("0.1"); }}
+              onClick={() => { if (!vsAI) { setIsFree(false); setStake("0.1"); } }}
+              disabled={vsAI}
               className={`flex-1 py-2 rounded-lg text-sm ${
                 !isFree ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-400"
-              }`}
+              } ${vsAI ? "opacity-40 cursor-not-allowed" : ""}`}
             >
               Stake CELO
             </button>
           </div>
+          {vsAI && (
+            <p className="text-[11px] text-yellow-500 mb-1">
+              ⚠️ Staking vs AI is temporarily disabled — a contract fix is needed first so AI wins don't burn funds. Free play vs AI works fine.
+            </p>
+          )}
 
           {!isFree && (
             <>
@@ -123,7 +140,11 @@ export default function LudoLobby() {
         <div className="mb-4 flex items-center justify-between">
           <p className="text-xs text-gray-500">Play vs AI (fills empty slots)</p>
           <button
-            onClick={() => setVsAI(!vsAI)}
+            onClick={() => {
+              const newVsAI = !vsAI;
+              setVsAI(newVsAI);
+              if (newVsAI) { setIsFree(true); setStake("0"); }
+            }}
             className={`w-10 h-6 rounded-full flex items-center px-0.5 ${
               vsAI ? "bg-blue-600 justify-end" : "bg-gray-700 justify-start"
             }`}
@@ -165,7 +186,15 @@ export default function LudoLobby() {
 
 function RoomCard({ roomId }: { roomId: bigint }) {
   const { address } = useAccount();
-  const { writeContract, isPending } = useWriteContract();
+  const router = useRouter();
+  const { writeContract, data: joinTxHash, isPending } = useWriteContract();
+  const { isSuccess: joinSuccess } = useWaitForTransactionReceipt({ hash: joinTxHash });
+
+  useEffect(() => {
+    if (joinSuccess) {
+      router.push(`/ludo/room/${roomId}`);
+    }
+  }, [joinSuccess, roomId, router]);
 
   const { data: room } = useReadContract({
     address: ADDRESSES.GameRooms,
@@ -197,11 +226,11 @@ function RoomCard({ roomId }: { roomId: bigint }) {
         </p>
       </div>
       <button
-        onClick={handleJoin}
-        disabled={!address || isPending || host.toLowerCase() === address?.toLowerCase()}
+        onClick={host.toLowerCase() === address?.toLowerCase() ? () => router.push(`/ludo/room/${roomId}`) : handleJoin}
+        disabled={!address || isPending}
         className="bg-blue-600 disabled:bg-gray-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg"
       >
-        {host.toLowerCase() === address?.toLowerCase() ? "Your room" : "Join"}
+        {host.toLowerCase() === address?.toLowerCase() ? "Enter room" : "Join"}
       </button>
     </div>
   );

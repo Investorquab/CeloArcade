@@ -5,16 +5,8 @@ import { ADDRESSES, GAME_ROOMS_ABI, BOT_FAUCET_ABI } from "@/lib/contracts";
 import { formatEther } from "viem";
 import Link from "next/link";
 
-const GAMES = [
-  { name: "Ludo", desc: "2–4 players · vs friends or AI", live: true, icon: "🎲", href: "/ludo" },
-  { name: "Quiz Duel", desc: "1v1 · fresh AI questions every match", live: false, icon: "💡", href: "/quiz" },
-  { name: "Quick Math", desc: "1v1 · fastest correct answer wins", live: false, icon: "🧮", href: "/math" },
-  { name: "Naija Whot", desc: "Coming soon", live: false, icon: "🃏", href: "/whot" },
-];
-
 export default function Hub() {
   const { address } = useAccount();
-
   const { data: balance } = useBalance({ address });
 
   const { data: roomCount } = useReadContract({
@@ -35,23 +27,17 @@ export default function Hub() {
 
   async function handleClaim() {
     if (!address) return;
-    // This calls your backend, which forwards to the bot's operator wallet,
-    // which then calls BotFaucet.dispense(address) onchain.
     const res = await fetch("/api/faucet-claim", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ address }),
     });
-    if (res.ok) {
-      alert("Claim submitted! CELO will arrive shortly.");
-    } else {
-      alert("Claim failed — check the console or try again in a moment.");
-    }
+    alert(res.ok ? "Claim submitted! CELO will arrive shortly." : "Claim failed — try again.");
   }
 
   return (
-    <main className="min-h-screen px-5 py-6 max-w-md mx-auto">
-      <div className="flex justify-between items-center mb-5">
+    <main className="min-h-screen px-5 py-6 max-w-lg mx-auto">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <p className="text-xs text-gray-500">Welcome back</p>
           <p className="text-sm font-medium">
@@ -66,45 +52,7 @@ export default function Hub() {
         </div>
       </div>
 
-      <p className="text-sm font-medium text-gray-400 mb-2.5">Choose a game</p>
-
-      <div className="flex flex-col gap-2.5">
-        {GAMES.map((game) => {
-          const card = (
-            <div
-              key={game.name}
-              className={`bg-gray-900 border border-gray-800 rounded-2xl p-3.5 flex items-center gap-3.5 ${
-                !game.live ? "opacity-60" : "cursor-pointer hover:bg-gray-850"
-              }`}
-            >
-              <div className="w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center flex-shrink-0 text-xl">
-                {game.icon}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">{game.name}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{game.desc}</p>
-              </div>
-              {game.live ? (
-                <span className="bg-green-950 text-green-400 text-[10px] font-medium px-2 py-0.5 rounded-full">
-                  LIVE
-                </span>
-              ) : (
-                <span className="text-gray-600">🔒</span>
-              )}
-            </div>
-          );
-
-          return game.live ? (
-            <Link href={game.href} key={game.name}>
-              {card}
-            </Link>
-          ) : (
-            card
-          );
-        })}
-      </div>
-
-      <div className="mt-4 bg-green-950 rounded-xl px-3.5 py-3 flex justify-between items-center">
+      <div className="bg-green-950 rounded-xl px-4 py-3 flex justify-between items-center mb-6">
         <div>
           <p className="text-xs font-medium text-green-400">Daily faucet</p>
           <p className="text-[11px] text-gray-400 mt-0.5">
@@ -120,9 +68,152 @@ export default function Hub() {
         </button>
       </div>
 
-      <p className="text-[11px] text-gray-600 text-center mt-4">
+      <div className="grid grid-cols-2 gap-3">
+        <GameTile
+          href="/quiz"
+          title="Quiz Duel"
+          subtitle="Fresh AI questions"
+          live
+          gradient="from-purple-600 to-indigo-700"
+          preview={<QuizPreview />}
+        />
+        <GameTile
+          href="/math"
+          title="Quick Math"
+          subtitle="Fastest wins"
+          live
+          gradient="from-cyan-600 to-blue-700"
+          preview={<MathPreview />}
+        />
+        <GameTile
+          href="/ludo"
+          title="Ludo"
+          subtitle="2-4 players"
+          live
+          gradient="from-red-600 to-orange-600"
+          preview={<LudoPreview />}
+        />
+        <GameTile
+          href="#"
+          title="Naija Whot"
+          subtitle="Coming soon"
+          live={false}
+          gradient="from-gray-700 to-gray-800"
+          preview={<WhotPreview />}
+        />
+      </div>
+
+      <p className="text-[11px] text-gray-600 text-center mt-5">
         {roomCount !== undefined ? `${roomCount.toString()} rooms created so far` : ""}
       </p>
     </main>
+  );
+}
+
+function GameTile({
+  href,
+  title,
+  subtitle,
+  live,
+  gradient,
+  preview,
+}: {
+  href: string;
+  title: string;
+  subtitle: string;
+  live: boolean;
+  gradient: string;
+  preview: React.ReactNode;
+}) {
+  const content = (
+    <div
+      className={`relative rounded-2xl bg-gradient-to-br ${gradient} p-3 flex flex-col overflow-hidden ${
+        !live ? "opacity-50" : "active:scale-95 transition-transform"
+      }`}
+    >
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-[10px] font-medium bg-black/30 text-white px-2 py-0.5 rounded-full w-fit">
+          {live ? "LIVE" : "SOON"}
+        </span>
+      </div>
+
+      {/* Mini mockup preview of the actual game screen */}
+      <div className="bg-black/25 rounded-xl p-2.5 mb-3 h-28 flex items-center justify-center">
+        {preview}
+      </div>
+
+      <p className="text-white text-sm font-semibold leading-tight">{title}</p>
+      <p className="text-white/70 text-[11px] mt-0.5">{subtitle}</p>
+    </div>
+  );
+
+  return live ? <Link href={href}>{content}</Link> : <div>{content}</div>;
+}
+
+function QuizPreview() {
+  return (
+    <div className="w-full">
+      <div className="bg-white/90 rounded-md px-2 py-1 mb-1.5">
+        <p className="text-[8px] text-gray-800 font-medium">What's the native token of Celo?</p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <div className="bg-blue-500 rounded px-2 py-1">
+          <p className="text-[7px] text-white font-medium">CELO ✓</p>
+        </div>
+        <div className="bg-white/20 rounded px-2 py-1">
+          <p className="text-[7px] text-white/70">MATIC</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MathPreview() {
+  return (
+    <div className="w-full text-center">
+      <p className="text-white text-lg font-bold mb-1.5">7 × 6 = ?</p>
+      <div className="grid grid-cols-2 gap-1">
+        {["40", "42", "36", "48"].map((n, i) => (
+          <div key={n} className={`rounded px-1 py-0.5 text-[8px] font-medium ${i === 1 ? "bg-cyan-400 text-black" : "bg-white/20 text-white"}`}>
+            {n}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LudoPreview() {
+  return (
+    <div className="w-16 h-16 rounded-md overflow-hidden grid grid-cols-2 grid-rows-2 gap-0.5">
+      <div className="bg-red-500 flex items-center justify-center">
+        <div className="w-2 h-2 rounded-full bg-white/90" />
+      </div>
+      <div className="bg-blue-500 flex items-center justify-center">
+        <div className="w-2 h-2 rounded-full bg-white/90" />
+      </div>
+      <div className="bg-green-500 flex items-center justify-center">
+        <div className="w-2 h-2 rounded-full bg-white/90" />
+      </div>
+      <div className="bg-yellow-500 flex items-center justify-center">
+        <div className="w-2 h-2 rounded-full bg-white/90" />
+      </div>
+    </div>
+  );
+}
+
+function WhotPreview() {
+  return (
+    <div className="relative w-16 h-16 flex items-center justify-center">
+      <div className="absolute w-9 h-12 bg-white rounded-md -rotate-12 flex items-center justify-center shadow">
+        <span className="text-red-600 text-xs font-bold">7♦</span>
+      </div>
+      <div className="absolute w-9 h-12 bg-white rounded-md flex items-center justify-center shadow z-10">
+        <span className="text-black text-xs font-bold">K♠</span>
+      </div>
+      <div className="absolute w-9 h-12 bg-white rounded-md rotate-12 flex items-center justify-center shadow">
+        <span className="text-red-600 text-xs font-bold">3♥</span>
+      </div>
+    </div>
   );
 }
